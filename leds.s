@@ -152,7 +152,7 @@ is_button_pressed:
 	str 	r0, [r7, #4]
 	# read button input
 	ldr	r0, [r7, #4]
-	bl	read_button_input
+	bl	read_input
 	ldr 	r3, [r7, #4]
 	cmp	r0, r3
 	beq	.L1
@@ -175,7 +175,7 @@ is_button_pressed:
 	bl   	delay
 	# read button input
 	ldr	r0, [r7, #4]
-	bl	read_button_input
+	bl	read_input
 	ldr 	r3, [r7, #4]
 	cmp	r0, r3
 	beq 	.L3
@@ -184,7 +184,7 @@ is_button_pressed:
 .L3:		
 	# counter = counter + 1
 	ldr 	r3, [r7, #8]
-	add		r3, #1
+	add	r3, #1
 	str 	r3, [r7, #8]
 	ldr 	r3, [r7, #8]
 	cmp	r3, #4
@@ -206,7 +206,7 @@ is_button_pressed:
 	# return 0
 	mov 	r0, #0
 	adds	r7, r7, #16
-	mov		sp, r7
+	mov	sp, r7
 	pop 	{r7, lr}
 	bx	lr
 
