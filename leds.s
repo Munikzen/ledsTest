@@ -267,4 +267,7 @@ loop:
         bl      subtraction
         str     r0, [r7]
 .L8:
+        ldr     r1, =GPIOA_IDR
+        ldr     r0, [r7]
+        str     r0, [r1]
         b       loop
