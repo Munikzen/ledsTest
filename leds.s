@@ -120,69 +120,111 @@ F3:     ldr     r0, [r7, #8] @ i < ms
         pop     {r7}
         bx      lr
 
-is_button_pressed:
-    push {r7, lr}                   @ backs r7 and lr up
-    sub sp, sp, #16                 @ reserves a 24 bytes function frame
-    add r7, sp, #0                  @ updates r7
-    str r0, [r7, #4]                @ backs function argument up
-    ldr r0, [r7, #4]                @ r0 <-- function argument 
-    bl read_button_input            @ branch to read_button_input
-    ldr r3, [r7, #4]                @ r3 <-- function argument
-    cmp r0, r3                      @ compare r0 with r3
-    beq L1                          @ branch to L1 if r0 equal r3
-    mov r0, #0                      @ r0 <-- 0
-    adds r7, r7, #16                 
-    mov sp, r7                      
-    pop {r7}
-    pop {lr}
-    bx lr
-L1: 
-    mov r3, #0                      @ r3 <--- 0
-    str r3, [r7, #8]                @ store r3
-    # for (int i=0; i<10; i++)
-    mov r3, #0                      @ r3 <-- 0
-    str r3, [r7, #12]               @ store r3
-    b L2                            @ branch to L2
-L5: 
-    mov r0, #50                     @ r0 <-- 50
-    bl wait_ms                      @ branch to wait_ms function
-    ldr r0, [r7, #4]                @ r0 <-- function argument
-    bl read_button_input            @ branch to read read_button_input function
-    ldr r3, [r7, #4]                @ r3 <-- function argument 
-    cmp r0, r3                      @ compare r0 with r3    
-    beq L3                          @ branch to L3 if r0 equal r3
-    mov r3, #0                      @ r3 <-- 0
-    str r3, [r7, #8]                @ store 0
-L3: 
-    ldr r3, [r7, #8]                @ r3 <-- 0
-    add r3, #1                      @ c++
-    str r3, [r7, #8]                @ store c++
-    ldr r3, [r7, #8]                @ r3 <-- c
-    cmp r3, #4                      @ compare r3 with 4
-    blt L4                          @ branch to L4 if r3 less than 4
-    ldr r0, [r7, #4]                @ r0 <-- function argument
-    adds r7, r7, #16                 
-    mov sp, r7
-    pop {r7}
-    pop {lr}
-    bx lr
-L4: 
-    ldr r3, [r7, #12]               @ r3 <-- j
-    add r3, #1                      @ j++
-    str r3, [r7, #12]               @ store j++
-L2: 
-    ldr r3, [r7, #12]               @ r3 <-- j
-    cmp r3, #10                     @ compare r3 with 10 
-    blt L5                          @ branch to L5 if r3 less than 10
+read_button_input:
+        @ Prologo
+	push	{r7} @ respalda r7
+	sub 	sp, sp, #12 @ respalda un marco de 16 bytes
+	add	r7, sp, #0 @ actualiza r7
+        @ Lectura de boton(es)
+	str 	r0, [r7] @ respalda el argumento recibido desde loop (que boton se presiona o ambos)
+        ldr     r1, =GPIOA_IDR @ carga la direccion base de GPIOA_IDR a r1 
+        ldr     r1, [r1] @ carga el contenido de GPIOA_IDR a r1 (estado de los botones)
+	ldr 	r0, [r7] @ carga en r0 el valor del argumento recibido desde loop (que boton se presiona o ambos)
+	and	r1, r1, r0 @ aplica una and entre el estado actual de GPIOA_IDR y el argumento recibido desde loop
+	cmp	r1, r0 
+	beq	L4 @ si son iguales sale de la funcion junto con el valor respectivo (leido)
+        @ si no se presiona nada devuelve 0
+	mov	r0, #0 @ return 0
+L4:
+        @ Epilogo
+	adds 	r7, r7, #12
+	mov	sp, r7
+	pop 	{r7}
+	bx	lr
 
-    # Epilogue
-    mov r0, #0                      @ return 0
-    adds r7, r7, #16
-    mov sp, r7
-    pop {r7}
-    pop {lr}
-    bx lr
-    
+
+
+
+# Esta funcion realiza el debouncing si se presiona un boton o ambos
+is_button_pressed:
+        @ Prologo
+	push 	{r7, lr} @ respalda r7 y lr
+	sub	sp, sp, #24 @ respalda un marco de 32 bytes
+	add	r7, sp, #0 @ actualiza r7
+        
+	str 	r0, [r7, #4] @ respalda el argumento recibido desde loop
+@ read_button_input
+@ if (button is not pressed)
+@     return false
+	ldr	r0, [r7, #4] @ carga el argumento recibido desde loop
+	bl	read_button_input
+	ldr 	r3, [r7, #4] @ carga el valor recibido desde read_button_input
+	cmp	r0, r3 
+	beq	L5 @ si hay al menos un boton presionado realiza el debouncing 
+        @ si no se presiona ningun boton (el valor recibido desde read_button_input es 0) sale de la funcion y devuelve 0 (false)
+        @ Epilogo
+	mov	r0, #0 @ return 0
+	adds	r7, r7, #24
+	mov	sp, r7 
+	pop 	{r7, lr}
+	bx	lr
+L1:
+@ counter = 0
+	mov	r3, #0 @ counter = 0
+	str	r3, [r7, #8] @ guarda el valor de counter dentro del marco
+@ for (int i = 0, i < 10, i++) 
+	mov     r3, #0 @ i = 0;
+        str     r3, [r7, #12] @ guarda el valor de i dentro del marco
+        b       L6
+L5:     
+@ wait 5 ms
+	mov 	r0, #50 @ 5ms a delay (wait_ms)
+	bl   	wait_ms
+@ read button input
+@ if (button is not pressed)
+@    counter = 0
+	ldr	r0, [r7, #4] @ carga el argumento recibido desde loop
+	bl	read_button_input
+	ldr 	r3, [r7, #4] @ carga el valor recibido desde read_button_input
+	cmp	r0, r3 
+	beq 	L7 @ si hay al menos un boton presionado se aumenta el contador una unidad
+	mov 	r3, #0 @ counter = 0
+	str	r3, [r7, #8] @ guarda el valor de counter dentro del marco
+L3:		
+@ else
+@ counter = counter + 1
+	ldr 	r3, [r7, #8] @ carga en r3 el valor de counter
+	add	r3, #1 @ suma una unidad a counter
+	str 	r3, [r7, #8] @ guarda el valor de counter dentro del marco
+@ if (counter >= 4)
+@    return true
+	ldr 	r3, [r7, #8] @ carga en r3 el valor de counter
+	cmp	r3, #4 @ counter >= 4 ?
+	blt	L8 @ si counter < 4 sigue dentro del ciclo
+	ldr	r0, [r7, #4] @ carga el valor de counter en r0 
+        @ Epilogo
+	adds	r7, r7, #24
+	mov	sp, r7
+	pop 	{r7}
+	pop 	{lr}
+	bx	lr
+L4:
+	ldr     r3, [r7, #12] @ carga en r3 el valor de i
+        add     r3, #1 @ i++
+        str     r3, [r7, #12] @ guarda el valor de i dentro del marco
+L2:     
+	ldr     r3, [r7, #12] @ carga en r3 el valor de i
+        cmp     r3, #10 @ i < 10 ?
+        blt     L9 @ si i < 10 sigue dentro del ciclo
+@ return false
+	@ Epilogo
+	mov 	r0, #0 @ return 0
+	adds	r7, r7, #24
+	mov	sp, r7
+	pop 	{r7}
+	pop 	{lr}
+	bx	lr
+
 setup:
         # Prologue
         push    {r7, lr}
