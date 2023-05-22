@@ -30,11 +30,11 @@ El archivo leds.s tiene los includes de gpio.inc y nvic.inc así que solo se deb
 
 Para comprobar si puede leerse la bluepill
 
-    arm-as archivo.s -o archivo.o
+    arm-none-eabi-as leds.s -o leds.o 
 
 Para generar el codigo objeto
 
-    arm-objcopy -O binary archivo.o archivo.bin 
+    arm-none-eabi-objcopy -O binary leds.o leds.bin 
 
 Para generar el archivo binario que se cargará en la bluepill
 
@@ -44,6 +44,8 @@ Para grabar en la bluepill.
 
 
 Una vez realizados estos pasos el proyecto debe funcionar como se describe arriba.
+
+## Marcos de las funciones de leds.s
 
 
 
