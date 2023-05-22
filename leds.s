@@ -132,10 +132,10 @@ read_button_input:
 	ldr 	r0, [r7] @ carga en r0 el valor del argumento recibido desde loop (que boton se presiona o ambos)
 	and	r1, r1, r0 @ aplica una and entre el estado actual de GPIOA_IDR y el argumento recibido desde loop
 	cmp	r1, r0 
-	beq	L4 @ si son iguales sale de la funcion junto con el valor respectivo (leido)
+	beq	L10 @ si son iguales sale de la funcion junto con el valor respectivo (leido)
         @ si no se presiona nada devuelve 0
 	mov	r0, #0 @ return 0
-L4:
+L10:
         @ Epilogo
 	adds 	r7, r7, #12
 	mov	sp, r7
@@ -179,7 +179,7 @@ L1:
 L5:     
 @ wait 5 ms
 	mov 	r0, #50 @ 5ms a delay (wait_ms)
-	bl   	wait_ms
+	bl   	delay
 @ read button input
 @ if (button is not pressed)
 @    counter = 0
