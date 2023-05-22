@@ -45,6 +45,7 @@ Para grabar en la bluepill.
 
 Una vez realizados estos pasos el proyecto debe funcionar como se describe arriba.
 
+## Marcos de las funciones de leds.s
 
 
 
