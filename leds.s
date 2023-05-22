@@ -128,14 +128,15 @@ read_input:
         str     r0, [r7] 
         # Function body
         ldr     r0, =GPIOA_IDR
-        ldr     r0, [r0]
+        ldr     r1, [r0]
         ldr     r3, [r7]
-        and     r0, r0, r3
-        cmp     r0, r3
+        and     r1, r1, r3 @ compares 
+        cmp     r1, r3
         beq     .L0
         mov     r0, #0
 .L0:    
         # Epilogue  
+        ldr     r0, [r7]
         adds    r7, r7, #4
         mov     sp, r7
         pop     {r7}
@@ -264,7 +265,7 @@ loop:
         bl      subtraction
         str     r0, [r7]
 .L8:
-        ldr     r1, =GPIOA_IDR
+        ldr     r1, =GPIOA_ODR
         ldr     r0, [r7]
         str     r0, [r1]
         b       loop
