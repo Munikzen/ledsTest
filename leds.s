@@ -127,11 +127,11 @@ read_input:
         add     r7, sp, #0
         str     r0, [r7] 
         # Function body
-        ldr     r0, =GPIOA_IDR
-        ldr     r1, [r0]
-        ldr     r3, [r7]
-        and     r0, r0, r3
-        cmp     r0, r3
+        ldr     r3, =GPIOA_IDR
+        ldr     r3, [r3]
+        ldr     r0, [r7]
+        and     r3, r3, r0
+        cmp     r3, r0
         beq     .L0
         mov     r0, #0
 .L0:    
