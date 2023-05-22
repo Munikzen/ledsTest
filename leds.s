@@ -120,94 +120,69 @@ F3:     ldr     r0, [r7, #8] @ i < ms
         pop     {r7}
         bx      lr
 
-read_input:
-        # Epilogue
-        push    {r7}
-        sub     sp, sp, #4
-        add     r7, sp, #0
-        str     r0, [r7] 
-        # Function body
-        ldr     r0, =GPIOA_IDR
-        ldr     r1, [r0]
-        ldr     r3, [r7]
-        and     r1, r1, r3 @ compares 
-        cmp     r1, r3
-        beq     .L0
-        mov     r0, #0
-.L0:    
-        # Epilogue  
-        ldr     r0, [r7]
-        adds    r7, r7, #4
-        mov     sp, r7
-        pop     {r7}
-        bx      lr
-
-
 is_button_pressed:
-	push 	{r7, lr}
-	sub	sp, sp, #16
-	add	r7, sp, #0
-	str 	r0, [r7, #4]
-	# read button input
-	ldr	r0, [r7, #4]
-	bl	read_input
-	ldr 	r3, [r7, #4]
-	cmp	r0, r3
-	beq	.L1
-	mov	r0, #0
-	adds	r7, r7, #16
-	mov	sp, r7
-	pop 	{r7, lr}
-	bx	lr
-.L1:
-	# counter = 0
-	mov	r3, #0
-	str	r3, [r7, #8]
-	# for (int i = 0, i < 10, i++) 
-	mov     r3, #0 @ j = 0;
-        str     r3, [r7, #12]
-        b       .L2
-.L5:     
-	# wait 5 ms
-	mov 	r0, #50
-	bl   	delay
-	# read button input
-	ldr	r0, [r7, #4]
-	bl	read_input
-	ldr 	r3, [r7, #4]
-	cmp	r0, r3
-	beq 	.L3
-	mov 	r3, #0
-	str	r3, [r7, #8]
-.L3:		
-	# counter = counter + 1
-	ldr 	r3, [r7, #8]
-	add	r3, #1
-	str 	r3, [r7, #8]
-	ldr 	r3, [r7, #8]
-	cmp	r3, #4
-	blt	.L4
-	ldr	r0, [r7, #4]
-	adds	r7, r7, #16
-	mov	sp, r7
-	pop 	{r7, lr}
-	bx	lr
-.L4:
-	ldr     r3, [r7, #12] @ j++;
-        add     r3, #1
-        str     r3, [r7, #12]
-.L2:     
-	ldr     r3, [r7, #12] @ j < 10;
-        cmp     r3, #10
-        blt     .L5
+    push {r7, lr}                   @ backs r7 and lr up
+    sub sp, sp, #16                 @ reserves a 24 bytes function frame
+    add r7, sp, #0                  @ updates r7
+    str r0, [r7, #4]                @ backs function argument up
+    ldr r0, [r7, #4]                @ r0 <-- function argument 
+    bl read_button_input            @ branch to read_button_input
+    ldr r3, [r7, #4]                @ r3 <-- function argument
+    cmp r0, r3                      @ compare r0 with r3
+    beq L1                          @ branch to L1 if r0 equal r3
+    mov r0, #0                      @ r0 <-- 0
+    adds r7, r7, #16                 
+    mov sp, r7                      
+    pop {r7}
+    pop {lr}
+    bx lr
+L1: 
+    mov r3, #0                      @ r3 <--- 0
+    str r3, [r7, #8]                @ store r3
+    # for (int i=0; i<10; i++)
+    mov r3, #0                      @ r3 <-- 0
+    str r3, [r7, #12]               @ store r3
+    b L2                            @ branch to L2
+L5: 
+    mov r0, #50                     @ r0 <-- 50
+    bl wait_ms                      @ branch to wait_ms function
+    ldr r0, [r7, #4]                @ r0 <-- function argument
+    bl read_button_input            @ branch to read read_button_input function
+    ldr r3, [r7, #4]                @ r3 <-- function argument 
+    cmp r0, r3                      @ compare r0 with r3    
+    beq L3                          @ branch to L3 if r0 equal r3
+    mov r3, #0                      @ r3 <-- 0
+    str r3, [r7, #8]                @ store 0
+L3: 
+    ldr r3, [r7, #8]                @ r3 <-- 0
+    add r3, #1                      @ c++
+    str r3, [r7, #8]                @ store c++
+    ldr r3, [r7, #8]                @ r3 <-- c
+    cmp r3, #4                      @ compare r3 with 4
+    blt L4                          @ branch to L4 if r3 less than 4
+    ldr r0, [r7, #4]                @ r0 <-- function argument
+    adds r7, r7, #16                 
+    mov sp, r7
+    pop {r7}
+    pop {lr}
+    bx lr
+L4: 
+    ldr r3, [r7, #12]               @ r3 <-- j
+    add r3, #1                      @ j++
+    str r3, [r7, #12]               @ store j++
+L2: 
+    ldr r3, [r7, #12]               @ r3 <-- j
+    cmp r3, #10                     @ compare r3 with 10 
+    blt L5                          @ branch to L5 if r3 less than 10
 
-	# return 0
-	mov 	r0, #0
-	adds	r7, r7, #16
-	mov	sp, r7
-	pop 	{r7, lr}
-	bx	lr
-
+    # Epilogue
+    mov r0, #0                      @ return 0
+    adds r7, r7, #16
+    mov sp, r7
+    pop {r7}
+    pop {lr}
+    bx lr
+    
 setup:
         # Prologue
         push    {r7, lr}
