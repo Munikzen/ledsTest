@@ -120,109 +120,91 @@ F3:     ldr     r0, [r7, #8] @ i < ms
         pop     {r7}
         bx      lr
 
-read_button_input:
-        @ Prologo
-	push	{r7} @ respalda r7
-	sub 	sp, sp, #12 @ respalda un marco de 16 bytes
-	add	r7, sp, #0 @ actualiza r7
-        @ Lectura de boton(es)
-	str 	r0, [r7] @ respalda el argumento recibido desde loop (que boton se presiona o ambos)
-        ldr     r1, =GPIOA_IDR @ carga la direccion base de GPIOA_IDR a r1 
-        ldr     r1, [r1] @ carga el contenido de GPIOA_IDR a r1 (estado de los botones)
-	ldr 	r0, [r7] @ carga en r0 el valor del argumento recibido desde loop (que boton se presiona o ambos)
-	and	r1, r1, r0 @ aplica una and entre el estado actual de GPIOA_IDR y el argumento recibido desde loop
-	cmp	r1, r0 
-	beq	L10 @ si son iguales sale de la funcion junto con el valor respectivo (leido)
-        @ si no se presiona nada devuelve 0
-	mov	r0, #0 @ return 0
-L10:
-        @ Epilogo
-	adds 	r7, r7, #12
-	mov	sp, r7
-	pop 	{r7}
-	bx	lr
+read_input:
+        # Epilogue
+        push    {r7}
+        sub     sp, sp, #4
+        add     r7, sp, #0
+        str     r0, [r7] 
+        # Function body
+        ldr     r0, =GPIOA_IDR
+        ldr     r1, [r0]
+        ldr     r3, [r7]
+        and     r0, r0, r3
+        cmp     r0, r3
+        beq     .L0
+        mov     r0, #0
+.L0:    
+        # Epilogue  
+        adds    r7, r7, #4
+        mov     sp, r7
+        pop     {r7}
+        bx      lr
 
 
-
-
-# Esta funcion realiza el debouncing si se presiona un boton o ambos
 is_button_pressed:
-        @ Prologo
-	push 	{r7, lr} @ respalda r7 y lr
-	sub	sp, sp, #24 @ respalda un marco de 32 bytes
-	add	r7, sp, #0 @ actualiza r7
-        
-	str 	r0, [r7, #4] @ respalda el argumento recibido desde loop
-@ read_button_input
-@ if (button is not pressed)
-@     return false
-	ldr	r0, [r7, #4] @ carga el argumento recibido desde loop
-	bl	read_button_input
-	ldr 	r3, [r7, #4] @ carga el valor recibido desde read_button_input
-	cmp	r0, r3 
-	beq	L5 @ si hay al menos un boton presionado realiza el debouncing 
-        @ si no se presiona ningun boton (el valor recibido desde read_button_input es 0) sale de la funcion y devuelve 0 (false)
-        @ Epilogo
-	mov	r0, #0 @ return 0
-	adds	r7, r7, #24
-	mov	sp, r7 
+	push 	{r7, lr}
+	sub	sp, sp, #16
+	add	r7, sp, #0
+	str 	r0, [r7, #4]
+	# read button input
+	ldr	r0, [r7, #4]
+	bl	read_input
+	ldr 	r3, [r7, #4]
+	cmp	r0, r3
+	beq	.L1
+	mov	r0, #0
+	adds	r7, r7, #16
+	mov	sp, r7
 	pop 	{r7, lr}
 	bx	lr
-L1:
-@ counter = 0
-	mov	r3, #0 @ counter = 0
-	str	r3, [r7, #8] @ guarda el valor de counter dentro del marco
-@ for (int i = 0, i < 10, i++) 
-	mov     r3, #0 @ i = 0;
-        str     r3, [r7, #12] @ guarda el valor de i dentro del marco
-        b       L6
-L5:     
-@ wait 5 ms
-	mov 	r0, #50 @ 5ms a delay (wait_ms)
+.L1:
+	# counter = 0
+	mov	r3, #0
+	str	r3, [r7, #8]
+	# for (int i = 0, i < 10, i++) 
+	mov     r3, #0 @ j = 0;
+        str     r3, [r7, #12]
+        b       .L2
+.L5:     
+	# wait 5 ms
+	mov 	r0, #50
 	bl   	delay
-@ read button input
-@ if (button is not pressed)
-@    counter = 0
-	ldr	r0, [r7, #4] @ carga el argumento recibido desde loop
-	bl	read_button_input
-	ldr 	r3, [r7, #4] @ carga el valor recibido desde read_button_input
-	cmp	r0, r3 
-	beq 	L7 @ si hay al menos un boton presionado se aumenta el contador una unidad
-	mov 	r3, #0 @ counter = 0
-	str	r3, [r7, #8] @ guarda el valor de counter dentro del marco
-L3:		
-@ else
-@ counter = counter + 1
-	ldr 	r3, [r7, #8] @ carga en r3 el valor de counter
-	add	r3, #1 @ suma una unidad a counter
-	str 	r3, [r7, #8] @ guarda el valor de counter dentro del marco
-@ if (counter >= 4)
-@    return true
-	ldr 	r3, [r7, #8] @ carga en r3 el valor de counter
-	cmp	r3, #4 @ counter >= 4 ?
-	blt	L8 @ si counter < 4 sigue dentro del ciclo
-	ldr	r0, [r7, #4] @ carga el valor de counter en r0 
-        @ Epilogo
-	adds	r7, r7, #24
+	# read button input
+	ldr	r0, [r7, #4]
+	bl	read_input
+	ldr 	r3, [r7, #4]
+	cmp	r0, r3
+	beq 	.L3
+	mov 	r3, #0
+	str	r3, [r7, #8]
+.L3:		
+	# counter = counter + 1
+	ldr 	r3, [r7, #8]
+	add	r3, #1
+	str 	r3, [r7, #8]
+	ldr 	r3, [r7, #8]
+	cmp	r3, #4
+	blt	.L4
+	ldr	r0, [r7, #4]
+	adds	r7, r7, #16
 	mov	sp, r7
-	pop 	{r7}
-	pop 	{lr}
+	pop 	{r7, lr}
 	bx	lr
-L4:
-	ldr     r3, [r7, #12] @ carga en r3 el valor de i
-        add     r3, #1 @ i++
-        str     r3, [r7, #12] @ guarda el valor de i dentro del marco
-L2:     
-	ldr     r3, [r7, #12] @ carga en r3 el valor de i
-        cmp     r3, #10 @ i < 10 ?
-        blt     L9 @ si i < 10 sigue dentro del ciclo
-@ return false
-	@ Epilogo
-	mov 	r0, #0 @ return 0
-	adds	r7, r7, #24
+.L4:
+	ldr     r3, [r7, #12] @ j++;
+        add     r3, #1
+        str     r3, [r7, #12]
+.L2:     
+	ldr     r3, [r7, #12] @ j < 10;
+        cmp     r3, #10
+        blt     .L5
+
+	# return 0
+	mov 	r0, #0
+	adds	r7, r7, #16
 	mov	sp, r7
-	pop 	{r7}
-	pop 	{lr}
+	pop 	{r7, lr}
 	bx	lr
 
 setup:
@@ -286,3 +268,4 @@ loop:
         ldr     r0, [r7]
         str     r0, [r1]
         b       loop
+        
