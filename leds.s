@@ -30,11 +30,11 @@ addition:
         ldr     r0, [r7, #4]
         mov     r1, #31 @ if counter < 31
         cmp     r0, r1
-        ble     .A1
+        ble     .ADDIT1
         bl      reset @ counter = 0;
         str     r0, [r7, #4] 
 
-.A1:
+.ADDIT1:
         ldr     r0, [r7, #4]
         # Epilogue
         adds    r7, r7, #8
@@ -55,11 +55,11 @@ subtraction:
         ldr     r0, [r7, #4]
         mov     r1, #0 @ if counter < 0
         cmp     r0, r1
-        bge     .S1
+        bge     .SUBTR1
         bl      reset @ counter = 0;
         str     r0, [r7, #4] 
 
-.S1:
+.SUBTR1:
         ldr     r0, [r7, #4]
         # Epilogue
         adds    r7, r7, #8
@@ -138,7 +138,7 @@ read_input:
         beq     .L0
         mov     r0, #0
 .L0:    
-        # Epilogue
+        # Epilogue  
         adds    r7, r7, #4
         mov     sp, r7
         pop     {r7}
